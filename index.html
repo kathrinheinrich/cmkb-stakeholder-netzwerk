@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMKB Stakeholder Netzwerk</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --teal-dark:#0B3948; --teal-mid:#5da7b2; --teal-light:#c8e6ea;
+  --gold:#9f8252; --gold-light:#f0e6d6; --flora:#fffcf2;
+  --greige-d:#8e897a; --greige-l:#dbd8ca;
+  --warm:#4caf7d; --critical:#c0544a; --bg:#f7f3ec;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:"DM Sans",sans-serif; background:var(--bg); color:var(--teal-dark); height:100vh; overflow:hidden; display:flex; flex-direction:column; font-size:14px; }
+.privacy-bar { background:var(--teal-dark); color:var(--teal-light); font-size:11px; padding:6px 16px; text-align:center; font-family:"DM Mono",monospace; flex-shrink:0; letter-spacing:.03em; }
+header { background:var(--teal-dark); padding:13px 22px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:10px; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,.1); }
+.header-left { display:flex; flex-direction:column; gap:2px; }
+header h1 { font-size:15px; font-weight:700; color:white; letter-spacing:.06em; text-transform:uppercase; }
+.header-sub { font-size:11px; color:var(--teal-light); font-family:"DM Mono",monospace; }
+.hright { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+#save-status { font-size:11px; color:var(--teal-mid); font-family:"DM Mono",monospace; }
+.hbtn { border:none; border-radius:6px; padding:7px 14px; font-family:"DM Sans",sans-serif; font-size:12px; font-weight:700; cursor:pointer; text-transform:uppercase; transition:opacity .2s; white-space:nowrap; letter-spacing:.04em; }
+.hbtn:hover { opacity:.82; }
+.hbtn-save   { background:var(--gold);       color:white; }
+.hbtn-export { background:var(--teal-mid);   color:white; }
+.hbtn-import { background:var(--gold-light); color:var(--gold); }
+.hbtn-clear  { background:rgba(255,255,255,.15); color:white; }
+#import-file { display:none; }
+.layout { display:grid; grid-template-columns:300px 1fr; flex:1; overflow:hidden; }
+.sidebar { background:white; border-right:2px solid var(--greige-l); overflow-y:auto; display:flex; flex-direction:column; }
+.ss { padding:16px; border-bottom:1px solid var(--greige-l); }
+.st { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); margin-bottom:12px; }
+.fr { display:flex; flex-direction:column; gap:4px; margin-bottom:9px; }
+label { font-size:11px; font-weight:600; color:var(--greige-d); text-transform:uppercase; letter-spacing:.05em; }
+input, select { background:var(--flora); border:1.5px solid var(--greige-l); border-radius:6px; padding:8px 10px; font-family:"DM Sans",sans-serif; font-size:13px; color:var(--teal-dark); outline:none; width:100%; }
+input:focus, select:focus { border-color:var(--teal-mid); background:white; }
+.fgrid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.btn { width:100%; padding:9px; border:none; border-radius:6px; font-family:"DM Sans",sans-serif; font-size:12px; font-weight:700; cursor:pointer; text-transform:uppercase; margin-top:6px; transition:all .2s; letter-spacing:.04em; }
+.bp { background:var(--teal-dark); color:white; }
+.bp:hover { background:var(--teal-mid); }
+.bs { background:var(--gold-light); color:var(--gold); }
+.bs:hover { background:var(--greige-l); }
+.si { display:flex; align-items:center; gap:9px; padding:9px; border-radius:7px; margin-bottom:5px; background:var(--flora); border:1.5px solid var(--greige-l); cursor:pointer; transition:all .15s; }
+.si:hover { border-color:var(--teal-mid); background:white; }
+.nd { border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:white; }
+.ii { flex:1; min-width:0; }
+.iname { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.imeta { font-size:11px; color:var(--greige-d); font-family:"DM Mono",monospace; margin-top:1px; }
+.idel { width:18px; height:18px; border-radius:50%; background:none; border:1.5px solid var(--greige-l); cursor:pointer; font-size:10px; color:var(--greige-d); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+.idel:hover { background:#fee; border-color:var(--critical); color:var(--critical); }
+.main { display:flex; flex-direction:column; overflow:hidden; }
+.tabs { background:white; border-bottom:2px solid var(--greige-l); padding:0 20px; display:flex; flex-shrink:0; }
+.tab { padding:13px 16px 11px; font-size:12px; font-weight:600; color:var(--greige-d); cursor:pointer; border-bottom:3px solid transparent; text-transform:uppercase; letter-spacing:.05em; transition:all .2s; }
+.tab.active { color:var(--teal-dark); border-bottom-color:var(--gold); }
+.tab:hover { color:var(--teal-dark); }
+.view { display:none; flex:1; flex-direction:column; overflow:hidden; position:relative; }
+.view.active { display:flex; }
+canvas { flex:1; display:block; width:100%; }
+.chint { position:absolute; bottom:12px; right:12px; background:rgba(11,57,72,.92); color:white; font-size:10px; padding:9px 13px; border-radius:7px; font-family:"DM Mono",monospace; line-height:2.1; pointer-events:none; }
+.mwrap { flex:1; padding:20px; overflow:auto; }
+.mgrid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; min-height:320px; height:100%; }
+.quad { border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:6px; position:relative; overflow:hidden; }
+.qlabel { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+.qsub { font-size:10px; opacity:.7; font-family:"DM Mono",monospace; margin-bottom:4px; }
+.qnodes { display:flex; flex-wrap:wrap; gap:5px; }
+.qnode { display:flex; align-items:center; gap:5px; padding:4px 9px; border-radius:16px; font-size:11px; font-weight:600; background:rgba(255,255,255,.75); border:1px solid rgba(255,255,255,.9); }
+.qdot { width:8px; height:8px; border-radius:50%; }
+.twrap { flex:1; padding:20px; overflow:auto; }
+table.tl { border-collapse:collapse; width:100%; }
+table.tl th { background:var(--teal-dark); color:white; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:10px 12px; text-align:center; }
+table.tl th:first-child { text-align:left; min-width:150px; }
+table.tl td { padding:9px 10px; border-bottom:1px solid var(--greige-l); background:white; text-align:center; vertical-align:middle; font-size:12px; }
+table.tl tr:nth-child(even) td { background:var(--flora); }
+table.tl td:first-child { text-align:left; font-weight:600; }
+.tlbadge { padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; font-family:"DM Mono",monospace; display:inline-block; }
+.tlsel { font-size:11px; padding:4px 7px; border-radius:5px; border:1.5px solid var(--greige-l); background:var(--flora); font-family:"DM Sans",sans-serif; cursor:pointer; }
+.tladd { margin-top:14px; display:flex; gap:10px; align-items:center; }
+.tladd input { flex:1; font-size:13px; }
+.legend { padding:8px 20px; background:white; border-top:2px solid var(--greige-l); display:flex; align-items:center; gap:14px; flex-wrap:wrap; flex-shrink:0; }
+.ltitle { font-size:11px; font-weight:700; text-transform:uppercase; color:var(--greige-d); letter-spacing:.06em; }
+.litem { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:500; }
+.ldot { width:10px; height:10px; border-radius:50%; }
+.ldiv { width:1px; height:14px; background:var(--greige-l); }
+#tooltip { position:fixed; background:var(--teal-dark); color:white; padding:11px 14px; border-radius:8px; font-size:12px; line-height:1.7; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1000; max-width:240px; }
+#tooltip.vis { opacity:1; }
+#tooltip strong { display:block; font-size:14px; margin-bottom:4px; color:var(--teal-light); }
+#conn-picker { position:fixed; background:white; border:1.5px solid var(--greige-l); border-radius:11px; padding:13px; display:none; flex-direction:column; gap:7px; z-index:2000; box-shadow:0 8px 32px rgba(11,57,72,.2); min-width:210px; }
+#conn-picker.vis { display:flex; }
+#conn-picker .cp-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); margin-bottom:3px; }
+.cp-btn { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:7px; border:1.5px solid var(--greige-l); background:var(--flora); cursor:pointer; font-family:"DM Sans",sans-serif; font-size:13px; font-weight:600; color:var(--teal-dark); transition:all .15s; }
+.cp-btn:hover { background:var(--teal-light); border-color:var(--teal-mid); }
+.cp-icon { font-size:18px; width:24px; text-align:center; }
+.cp-del { background:none; border:none; color:var(--greige-d); font-size:12px; cursor:pointer; padding:5px 9px; border-radius:5px; text-align:left; font-family:"DM Sans",sans-serif; }
+.cp-del:hover { color:var(--critical); background:#fee; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--greige-l); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="privacy-bar">
+  Change-Maker Karriere Beratung &nbsp;&middot;&nbsp; Ihre Daten bleiben ausschliesslich in Ihrem Browser &mdash; kein Server, keine Weitergabe
+</div>
+
+<header>
+  <div class="header-left">
+    <h1>Stakeholder Netzwerk</h1>
+    <div class="header-sub">Change-Maker Karriere Beratung &nbsp;&middot;&nbsp; Onboarding Mastery &nbsp;&middot;&nbsp; Erste 100 Tage</div>
+  </div>
+  <div class="hright">
+    <span id="save-status"></span>
+    <button class="hbtn hbtn-save" onclick="saveLocal()">Speichern</button>
+    <button class="hbtn hbtn-export" onclick="exportJSON()">Exportieren</button>
+    <button class="hbtn hbtn-import" onclick="document.getElementById('import-file').click()">Importieren</button>
+    <button class="hbtn hbtn-clear" onclick="clearAll()">Leeren</button>
+    <input type="file" id="import-file" accept=".json" onchange="importJSON(event)">
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="ss">
+      <div class="st">Stakeholder hinzufuegen</div>
+      <div class="fr"><label>Name</label>
+        <input id="inp-name" placeholder="z.B. Maria Schneider" onkeydown="if(event.key==='Enter')addS()">
+      </div>
+      <div class="fr"><label>Rolle / Funktion</label>
+        <input id="inp-role" placeholder="z.B. CFO">
+      </div>
+      <div class="fgrid">
+        <div class="fr"><label>Macht 1-5</label>
+          <select id="inp-macht">
+            <option value="1">1 gering</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5 hoch</option>
+          </select>
+        </div>
+        <div class="fr"><label>Interesse 1-5</label>
+          <select id="inp-int">
+            <option value="1">1 gering</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5 hoch</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr"><label>Beziehungsqualitaet</label>
+        <select id="inp-bez">
+          <option value="warm">Warm</option>
+          <option value="neutral" selected>Neutral</option>
+          <option value="kritisch">Kritisch</option>
+        </select>
+      </div>
+      <div class="fr"><label>Kernmotiv (optional)</label>
+        <input id="inp-motiv" placeholder="z.B. Budgetkontrolle">
+      </div>
+      <button class="btn bp" onclick="addS()">+ Hinzufuegen</button>
+    </div>
+
+    <div class="ss">
+      <div class="st">Verbindungstypen</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--teal-dark);">
+        <div style="display:flex;align-items:center;gap:8px;">&#9889; <strong>Konflikt</strong> &nbsp; &#9733; <strong>Allianz</strong></div>
+        <div style="display:flex;align-items:center;gap:8px;">&#129309; <strong>Kooperation</strong></div>
+        <div style="display:flex;align-items:center;gap:8px;">&#8594; <strong>Berichtet an</strong> &nbsp; &#8596; <strong>Abhaengigkeit</strong></div>
+        <div style="margin-top:5px;padding:9px;background:var(--teal-light);border-radius:6px;font-size:11px;line-height:1.7;color:var(--teal-dark);">
+          <strong>So geht es:</strong><br>
+          1. Knoten anklicken<br>
+          2. Zweiten Knoten anklicken<br>
+          3. Verbindungstyp auswaehlen
+        </div>
+      </div>
+    </div>
+
+    <div class="ss" style="flex:1;">
+      <div class="st">Meine Stakeholder (<span id="count">0</span>)</div>
+      <div id="slist">
+        <div style="color:var(--greige-d);font-size:12px;text-align:center;padding:20px 10px;line-height:1.7;">
+          Trage oben deinen ersten<br>Stakeholder ein
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('network',this)">&#128375; Netzwerk-Map</div>
+      <div class="tab" onclick="switchTab('matrix',this)">&#128506; Prioritaets-Matrix</div>
+      <div class="tab" onclick="switchTab('timeline',this)">&#128200; Beziehungsverlauf</div>
+    </div>
+
+    <div id="view-network" class="view active">
+      <canvas id="cv"></canvas>
+      <div class="chint">
+        1. Knoten anklicken = auswaehlen<br>
+        2. Zweiten anklicken = Verbindung ziehen<br>
+        3. Verbindungs-Icon anklicken = aendern<br>
+        Knoten ziehen = verschieben
+      </div>
+    </div>
+
+    <div id="view-matrix" class="view">
+      <div class="mwrap"><div class="mgrid" id="mgrid"></div></div>
+    </div>
+
+    <div id="view-timeline" class="view">
+      <div class="twrap">
+        <table class="tl" id="tltable"></table>
+        <div class="tladd">
+          <input id="tlnew" placeholder="Neue Spalte z.B. KW 12 oder Monat 3">
+          <button class="btn bs" style="width:auto;padding:8px 16px;margin:0;" onclick="addTlCol()">+ Spalte</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="ltitle">Beziehung</span>
+      <div class="litem"><div class="ldot" style="background:#4caf7d"></div>Warm</div>
+      <div class="litem"><div class="ldot" style="background:#9f8252"></div>Neutral</div>
+      <div class="litem"><div class="ldot" style="background:#c0544a"></div>Kritisch</div>
+      <div class="ldiv"></div>
+      <span class="ltitle">Verbindung</span>
+      <div class="litem">&#9889; Konflikt</div>
+      <div class="litem">&#9733; Allianz</div>
+      <div class="litem">&#129309; Kooperation</div>
+      <div class="litem">&#8594; Berichtet</div>
+      <div class="litem">&#8596; Abhaengig</div>
+      <div class="ldiv"></div>
+      <div class="litem" style="color:var(--greige-d);font-family:'DM Mono',monospace;font-size:10px;">&#128218; Watkins 2003 &middot; Cross &amp; Thomas 2008</div>
+    </div>
+  </div>
+</div>
+
+<div id="conn-picker">
+  <div class="cp-title">Verbindungstyp waehlen</div>
+  <div class="cp-btn" onclick="setConnType('konflikt')"><span class="cp-icon">&#9889;</span> Konflikt / Spannung</div>
+  <div class="cp-btn" onclick="setConnType('allianz')"><span class="cp-icon">&#9733;</span> Starke Allianz</div>
+  <div class="cp-btn" onclick="setConnType('kooperation')"><span class="cp-icon">&#129309;</span> Kooperation</div>
+  <div class="cp-btn" onclick="setConnType('berichtet')"><span class="cp-icon">&#8594;</span> Berichtet an</div>
+  <div class="cp-btn" onclick="setConnType('abhaengigkeit')"><span class="cp-icon">&#8596;</span> Abhaengigkeit</div>
+  <hr style="border:none;border-top:1px solid var(--greige-l);margin:3px 0;">
+  <button class="cp-del" onclick="deletePickerConn()">Verbindung loeschen</button>
+  <button class="cp-del" onclick="closePicker()">Abbrechen</button>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+var CT = {
+  konflikt:      { icon:'⚡', color:'#c0544a', dash:[5,4], width:2.5 },
+  allianz:       { icon:'★', color:'#4caf7d', dash:[],    width:3   },
+  kooperation:   { icon:'🤝', color:'#5da7b2', dash:[],    width:2   },
+  berichtet:     { icon:'→', color:'#0B3948', dash:[],    width:2   },
+  abhaengigkeit: { icon:'↔', color:'#9f8252', dash:[6,3], width:1.5 }
+};
+var COLORS = { warm:'#4caf7d', neutral:'#9f8252', kritisch:'#c0544a' };
+var stakeholders = [], connections = [], nodes = [];
+var tlCols = ['Start','KW 2','KW 4','KW 8'], tlData = {};
+var dragging = null, dox = 0, doy = 0, hovered = null, selId = null;
+var connectFrom = null, pickerConnIdx = -1;
+var SK = 'cmkb_netzwerk_v2';
+
+function saveLocal() {
+  try { localStorage.setItem(SK, JSON.stringify(buildData())); showStatus('Gespeichert'); }
+  catch(e) { showStatus('Fehler'); }
+}
+function loadLocal() {
+  try { var r = localStorage.getItem(SK); if (r) { applyData(JSON.parse(r)); updateAll(); } }
+  catch(e) {}
+}
+function exportJSON() {
+  var b = new Blob([JSON.stringify(buildData(),null,2)], {type:'application/json'});
+  var u = URL.createObjectURL(b);
+  var a = document.createElement('a');
+  a.href = u; a.download = 'CMKB_Stakeholder_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+  showStatus('Exportiert');
+}
+function importJSON(e) {
+  var f = e.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(ev) {
+    try { applyData(JSON.parse(ev.target.result)); updateAll(); showStatus('Importiert'); }
+    catch(err) { showStatus('Datei ungueltig'); }
+  };
+  r.readAsText(f); e.target.value = '';
+}
+function clearAll() {
+  if (!confirm('Alle Daten loeschen?')) return;
+  stakeholders = []; connections = []; nodes = [];
+  tlData = {}; tlCols = ['Start','KW 2','KW 4','KW 8'];
+  connectFrom = null; selId = null;
+  localStorage.removeItem(SK);
+  updateAll(); showStatus('Geleert');
+}
+function buildData() {
+  return { version:'2.0', date:new Date().toISOString(),
+    stakeholders:stakeholders, connections:connections,
+    timeline:{ columns:tlCols, data:tlData },
+    positions:nodes.map(function(n){ return {id:n.id,x:n.x,y:n.y}; }) };
+}
+function applyData(d) {
+  stakeholders = d.stakeholders || [];
+  connections  = d.connections  || [];
+  if (d.timeline) { tlCols = d.timeline.columns || tlCols; tlData = d.timeline.data || {}; }
+  var cv = document.getElementById('cv');
+  var w = cv.offsetWidth||600, h = cv.offsetHeight||400;
+  nodes = stakeholders.map(function(s,i) {
+    var p = d.positions && d.positions.find(function(p){ return p.id===s.id; });
+    if (p && !isNaN(p.x)) return {id:s.id, x:p.x, y:p.y};
+    var a = i*2*Math.PI/Math.max(stakeholders.length,1)-Math.PI/2;
+    return {id:s.id, x:w/2+Math.cos(a)*Math.min(w,h)*0.28, y:h/2+Math.sin(a)*Math.min(w,h)*0.28};
+  });
+}
+function showStatus(m) {
+  var el = document.getElementById('save-status');
+  el.textContent = m;
+  setTimeout(function(){ el.textContent=''; }, 2500);
+}
+
+function addS() {
+  var name = document.getElementById('inp-name').value.trim();
+  if (!name) return;
+  var id = 'sk_' + Date.now();
+  var s = { id:id, name:name,
+    role:     document.getElementById('inp-role').value.trim(),
+    macht:    parseInt(document.getElementById('inp-macht').value),
+    interesse:parseInt(document.getElementById('inp-int').value),
+    beziehung:document.getElementById('inp-bez').value,
+    motiv:    document.getElementById('inp-motiv').value.trim() };
+  stakeholders.push(s);
+  tlData[id] = {};
+  tlCols.forEach(function(c){ tlData[id][c] = s.beziehung; });
+  var cv = document.getElementById('cv');
+  var a = nodes.length * 2.4;
+  var r = Math.min(cv.width||600, cv.height||400) * 0.28;
+  nodes.push({ id:id, x:(cv.width||600)/2+Math.cos(a)*r, y:(cv.height||400)/2+Math.sin(a)*r });
+  ['inp-name','inp-role','inp-motiv'].forEach(function(i){ document.getElementById(i).value=''; });
+  updateAll(); saveLocal();
+}
+function delS(id) {
+  stakeholders = stakeholders.filter(function(s){ return s.id!==id; });
+  nodes        = nodes.filter(function(n){ return n.id!==id; });
+  connections  = connections.filter(function(c){ return c.from!==id && c.to!==id; });
+  delete tlData[id];
+  if (selId===id) selId=null;
+  if (connectFrom===id) connectFrom=null;
+  updateAll(); saveLocal();
+}
+
+function openPickerNew(fid, tid, x, y) {
+  var ex = connections.findIndex(function(c){
+    return (c.from===fid&&c.to===tid)||(c.from===tid&&c.to===fid);
+  });
+  if (ex !== -1) { pickerConnIdx = ex; }
+  else { connections.push({from:fid, to:tid, type:'kooperation'}); pickerConnIdx = connections.length-1; }
+  showPicker(x, y);
+}
+function openPickerEdit(idx, x, y) { pickerConnIdx = idx; showPicker(x, y); }
+function showPicker(x, y) {
+  var p = document.getElementById('conn-picker');
+  p.style.left = Math.min(x, window.innerWidth-220) + 'px';
+  p.style.top  = Math.min(y, window.innerHeight-280) + 'px';
+  p.classList.add('vis');
+}
+function closePicker() {
+  document.getElementById('conn-picker').classList.remove('vis');
+  pickerConnIdx = -1; connectFrom = null; selId = null; drawNet();
+}
+function setConnType(t) {
+  if (pickerConnIdx >= 0 && pickerConnIdx < connections.length)
+    connections[pickerConnIdx].type = t;
+  closePicker(); updateAll(); saveLocal();
+}
+function deletePickerConn() {
+  if (pickerConnIdx >= 0) connections.splice(pickerConnIdx, 1);
+  closePicker(); updateAll(); saveLocal();
+}
+
+function updateAll() {
+  document.getElementById('count').textContent = stakeholders.length;
+  renderList(); drawNet(); renderMatrix(); renderTl();
+}
+
+function renderList() {
+  var el = document.getElementById('slist');
+  if (!stakeholders.length) {
+    el.innerHTML = '<div style="color:var(--greige-d);font-size:12px;text-align:center;padding:20px 10px;line-height:1.7;">Trage oben deinen ersten<br>Stakeholder ein</div>';
+    return;
+  }
+  el.innerHTML = stakeholders.map(function(s) {
+    var sz = (16 + s.macht*2) + 'px';
+    var isC = s.id === connectFrom;
+    var b = isC ? 'border:2px solid var(--gold);background:var(--gold-light);' : '';
+    return '<div class="si" style="' + b + '" onclick="selS(\'' + s.id + '\')">' +
+      '<div class="nd" style="background:' + COLORS[s.beziehung] + ';width:' + sz + ';height:' + sz + ';">' + s.macht + '</div>' +
+      '<div class="ii">' +
+        '<div class="iname">' + s.name + '</div>' +
+        '<div class="imeta">' + (s.role||'--') + ' &nbsp; M:' + s.macht + ' &nbsp; I:' + s.interesse + '</div>' +
+      '</div>' +
+      '<button class="idel" onclick="event.stopPropagation();delS(\'' + s.id + '\')">&#10005;</button>' +
+      '</div>';
+  }).join('');
+}
+
+function selS(id) {
+  closePicker();
+  if (connectFrom) {
+    if (connectFrom !== id) {
+      var n1 = nodes.find(function(n){ return n.id === connectFrom; });
+      var n2 = nodes.find(function(n){ return n.id === id; });
+      openPickerNew(connectFrom, id,
+        n1&&n2 ? (n1.x+n2.x)/2 : window.innerWidth/2,
+        n1&&n2 ? (n1.y+n2.y)/2 : window.innerHeight/2);
+    }
+    connectFrom = null; selId = null;
+  } else {
+    selId = id; connectFrom = id;
+  }
+  renderList(); drawNet();
+}
+
+function initCanvas() {
+  var cv = document.getElementById('cv');
+  function resize() { cv.width=cv.offsetWidth; cv.height=cv.offsetHeight; drawNet(); }
+  window.addEventListener('resize', resize); setTimeout(resize, 60);
+
+  cv.addEventListener('mousedown', function(e) {
+    if (document.getElementById('conn-picker').classList.contains('vis')) return;
+    var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    var hn = nodeAt(mx, my);
+    var hc = hn ? -1 : connLabelAt(mx, my);
+    if (hc >= 0) { openPickerEdit(hc, e.clientX, e.clientY); return; }
+    if (hn) {
+      if (connectFrom && connectFrom !== hn.id) {
+        openPickerNew(connectFrom, hn.id, e.clientX, e.clientY);
+        connectFrom=null; selId=null; renderList();
+      } else if (connectFrom === hn.id) {
+        connectFrom=null; selId=null; renderList(); drawNet();
+      } else {
+        dragging=hn; dox=mx-hn.x; doy=my-hn.y;
+        selId=hn.id; connectFrom=hn.id; renderList(); drawNet();
+      }
+      return;
+    }
+    if (!dragging) { connectFrom=null; selId=null; renderList(); drawNet(); }
+  });
+  cv.addEventListener('mousemove', function(e) {
+    var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    if (dragging) { dragging.x=mx-dox; dragging.y=my-doy; drawNet(); return; }
+    var hit = nodeAt(mx, my);
+    if (hit !== hovered) { hovered=hit; drawNet(); }
+    var tt = document.getElementById('tooltip');
+    if (hit) {
+      var s = stakeholders.find(function(s){ return s.id===hit.id; });
+      tt.innerHTML = '<strong>' + s.name + '</strong>' + (s.role?s.role+'<br>':'') +
+        'Macht: ' + s.macht + ' &nbsp; Interesse: ' + s.interesse + '<br>' +
+        s.beziehung.charAt(0).toUpperCase() + s.beziehung.slice(1) +
+        (s.motiv ? '<br>' + s.motiv : '');
+      tt.style.left=(e.clientX+16)+'px'; tt.style.top=(e.clientY-12)+'px';
+      tt.classList.add('vis');
+    } else { tt.classList.remove('vis'); }
+  });
+  cv.addEventListener('mouseup', function(){ if(dragging) saveLocal(); dragging=null; });
+  cv.addEventListener('mouseleave', function(){
+    dragging=null; hovered=null;
+    document.getElementById('tooltip').classList.remove('vis');
+  });
+  cv.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var t=e.touches[0], r=cv.getBoundingClientRect();
+    var hit=nodeAt(t.clientX-r.left, t.clientY-r.top);
+    if (hit) { dragging=hit; dox=t.clientX-r.left-hit.x; doy=t.clientY-r.top-hit.y; }
+  },{passive:false});
+  cv.addEventListener('touchmove', function(e) {
+    e.preventDefault(); if(!dragging)return;
+    var t=e.touches[0], r=cv.getBoundingClientRect();
+    dragging.x=t.clientX-r.left-dox; dragging.y=t.clientY-r.top-doy; drawNet();
+  },{passive:false});
+  cv.addEventListener('touchend', function(){ if(dragging)saveLocal(); dragging=null; });
+  document.addEventListener('click', function(e) {
+    var p = document.getElementById('conn-picker');
+    if (p.classList.contains('vis') && !p.contains(e.target) && e.target.id!=='cv') closePicker();
+  });
+}
+
+function nodeAt(mx, my) {
+  for (var i=nodes.length-1; i>=0; i--) {
+    var n=nodes[i], s=stakeholders.find(function(s){ return s.id===n.id; });
+    if (!s) continue;
+    var r=nodeR(s), dx=mx-n.x, dy=my-n.y;
+    if (dx*dx+dy*dy < r*r) return n;
+  }
+  return null;
+}
+function connLabelAt(mx, my) {
+  for (var i=0; i<connections.length; i++) {
+    var c=connections[i];
+    var fn=nodes.find(function(n){ return n.id===c.from; });
+    var tn=nodes.find(function(n){ return n.id===c.to; });
+    if (!fn||!tn) continue;
+    var dx=mx-(fn.x+tn.x)/2, dy=my-(fn.y+tn.y)/2;
+    if (dx*dx+dy*dy < 225) return i;
+  }
+  return -1;
+}
+function nodeR(s) { return 14 + s.macht*5; }
+
+function drawNet() {
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if (!stakeholders.length) {
+    ctx.fillStyle='#b0aba2'; ctx.font='15px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Fuege links Stakeholder hinzu', cv.width/2, cv.height/2-12);
+    ctx.fillText('um das Netzwerk zu sehen', cv.width/2, cv.height/2+14);
+    return;
+  }
+  nodes.forEach(function(n,i) {
+    if (!n.x||isNaN(n.x)) {
+      var a=i*2*Math.PI/nodes.length-Math.PI/2, r=Math.min(cv.width,cv.height)*0.28;
+      n.x=cv.width/2+Math.cos(a)*r; n.y=cv.height/2+Math.sin(a)*r;
+    }
+  });
+  connections.forEach(function(conn) {
+    var fn=nodes.find(function(n){ return n.id===conn.from; });
+    var tn=nodes.find(function(n){ return n.id===conn.to; });
+    if (!fn||!tn) return;
+    var ct = CT[conn.type] || CT.kooperation;
+    ctx.beginPath(); ctx.moveTo(fn.x,fn.y); ctx.lineTo(tn.x,tn.y);
+    ctx.strokeStyle=ct.color; ctx.lineWidth=ct.width;
+    ctx.setLineDash(ct.dash); ctx.stroke(); ctx.setLineDash([]);
+    var dx=tn.x-fn.x, dy=tn.y-fn.y, len=Math.sqrt(dx*dx+dy*dy);
+    var st=stakeholders.find(function(s){ return s.id===conn.to; });
+    var ar=(st?nodeR(st):18)+5;
+    var ax=tn.x-(dx/len)*ar, ay=tn.y-(dy/len)*ar, ang=Math.atan2(dy,dx);
+    ctx.beginPath(); ctx.moveTo(ax,ay);
+    ctx.lineTo(ax-10*Math.cos(ang-0.4),ay-10*Math.sin(ang-0.4));
+    ctx.lineTo(ax-10*Math.cos(ang+0.4),ay-10*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fillStyle=ct.color; ctx.fill();
+    var lx=(fn.x+tn.x)/2, ly=(fn.y+tn.y)/2;
+    ctx.beginPath(); ctx.arc(lx,ly,14,0,Math.PI*2);
+    ctx.fillStyle='white'; ctx.fill();
+    ctx.strokeStyle=ct.color; ctx.lineWidth=2; ctx.stroke();
+    ctx.font='14px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle=ct.color; ctx.fillText(ct.icon, lx, ly);
+    ctx.textBaseline='alphabetic';
+  });
+  nodes.forEach(function(n) {
+    var s=stakeholders.find(function(s){ return s.id===n.id; }); if (!s) return;
+    var r=nodeR(s), isH=hovered&&hovered.id===n.id, isC=connectFrom===n.id;
+    ctx.shadowColor='rgba(11,57,72,0.25)'; ctx.shadowBlur=isH?18:7;
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.fillStyle=COLORS[s.beziehung]; ctx.fill();
+    ctx.shadowBlur=0;
+    if (isC) {
+      ctx.beginPath(); ctx.arc(n.x,n.y,r+6,0,Math.PI*2);
+      ctx.strokeStyle='#9f8252'; ctx.lineWidth=3; ctx.stroke();
+      ctx.font='bold 11px DM Sans,sans-serif'; ctx.fillStyle='#9f8252';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('Jetzt zweiten waehlen', n.x, n.y+r+11);
+      ctx.textBaseline='alphabetic';
+    }
+    ctx.beginPath();
+    ctx.arc(n.x,n.y,r+5,-Math.PI/2,-Math.PI/2+(s.interesse/5)*Math.PI*2);
+    ctx.strokeStyle='rgba(93,167,178,0.75)'; ctx.lineWidth=4; ctx.stroke();
+    var init=s.name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+    ctx.font='bold '+Math.max(11,Math.floor(r*0.52))+'px DM Sans,sans-serif';
+    ctx.fillStyle='white'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(init, n.x, n.y);
+    ctx.font='600 12px DM Sans,sans-serif'; ctx.fillStyle='#0B3948';
+    ctx.textBaseline='top'; ctx.fillText(s.name, n.x, n.y+r+10);
+    ctx.textBaseline='alphabetic';
+  });
+}
+
+function renderMatrix() {
+  var q = [
+    {l:'SCHLUESSEL',  s:'Macht >= 4  |  Interesse >= 4', bg:'#0B3948', c:'white',   f:function(s){ return s.macht>=4&&s.interesse>=4; }},
+    {l:'BEOBACHTEN',  s:'Macht >= 4  |  Interesse < 4',  bg:'#f0e6d6', c:'#9f8252', f:function(s){ return s.macht>=4&&s.interesse<4;  }},
+    {l:'EINBEZIEHEN', s:'Macht < 4   |  Interesse >= 4', bg:'#c8e6ea', c:'#0B3948', f:function(s){ return s.macht<4&&s.interesse>=4;  }},
+    {l:'MINIMAL',     s:'Macht < 4   |  Interesse < 4',  bg:'#f5f0e8', c:'#8e897a', f:function(s){ return s.macht<4&&s.interesse<4;   }},
+  ];
+  document.getElementById('mgrid').innerHTML = q.map(function(q) {
+    var m = stakeholders.filter(q.f);
+    var nh = m.length
+      ? m.map(function(s){
+          return '<div class="qnode"><div class="qdot" style="background:'+COLORS[s.beziehung]+'"></div>' +
+                 '<span style="color:'+(q.c==='white'?'white':'#0B3948')+'">'+s.name+'</span></div>';
+        }).join('')
+      : '<span style="font-size:11px;opacity:.45;color:'+q.c+'">Noch leer</span>';
+    return '<div class="quad" style="background:'+q.bg+'">' +
+      '<div class="qlabel" style="color:'+q.c+'">'+q.l+'</div>' +
+      '<div class="qsub" style="color:'+q.c+'">'+q.s+'</div>' +
+      '<div class="qnodes">'+nh+'</div>' +
+      '<div style="position:absolute;bottom:10px;right:14px;font-size:28px;opacity:.07;">'+m.length+'</div></div>';
+  }).join('');
+}
+
+function renderTl() {
+  var tbl = document.getElementById('tltable');
+  if (!stakeholders.length) {
+    tbl.innerHTML='<tr><td style="padding:32px;text-align:center;color:var(--greige-d);font-size:13px;">Fuege Stakeholder hinzu um den Verlauf zu tracken</td></tr>';
+    return;
+  }
+  var bM={warm:'#d4edda',neutral:'#fef3cd',kritisch:'#f8d7da'};
+  var fM={warm:'#2d6a2d',neutral:'#856404',kritisch:'#721c24'};
+  var h = '<thead><tr><th>Stakeholder</th>' + tlCols.map(function(c){ return '<th>'+c+'</th>'; }).join('') + '</tr></thead><tbody>';
+  stakeholders.forEach(function(s) {
+    h += '<tr><td><div style="display:flex;align-items:center;gap:8px;">' +
+      '<div class="nd" style="background:'+COLORS[s.beziehung]+';width:18px;height:18px;font-size:9px;">'+s.macht+'</div>' +
+      s.name + '</div></td>';
+    tlCols.forEach(function(col) {
+      var v = (tlData[s.id] && tlData[s.id][col]) || '';
+      if (v) {
+        h += '<td><span class="tlbadge" style="background:'+(bM[v]||'#eee')+';color:'+(fM[v]||'#333')+'">' +
+             v.charAt(0).toUpperCase()+v.slice(1)+'</span></td>';
+      } else {
+        h += '<td><select class="tlsel" onchange="setTl(\'' + s.id + '\',\'' + col + '\',this.value)">' +
+             '<option value="">-</option>' +
+             '<option value="warm">Warm</option>' +
+             '<option value="neutral">Neutral</option>' +
+             '<option value="kritisch">Kritisch</option>' +
+             '</select></td>';
+      }
+    });
+    h += '</tr>';
+  });
+  tbl.innerHTML = h + '</tbody>';
+}
+function setTl(sid, col, val) {
+  if (!tlData[sid]) tlData[sid] = {};
+  tlData[sid][col] = val; renderTl(); saveLocal();
+}
+function addTlCol() {
+  var v = document.getElementById('tlnew').value.trim();
+  if (!v || tlCols.indexOf(v) !== -1) return;
+  tlCols.push(v); document.getElementById('tlnew').value = '';
+  renderTl(); saveLocal();
+}
+function switchTab(view, el) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('view-'+view).classList.add('active');
+  if (view==='network')  setTimeout(drawNet, 50);
+  if (view==='matrix')   renderMatrix();
+  if (view==='timeline') renderTl();
+}
+window.addEventListener('load', function(){ initCanvas(); loadLocal(); });
+</script>
+</body>
+</html>
