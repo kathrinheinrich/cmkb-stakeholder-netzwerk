@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMKB Stakeholder Netzwerk</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --teal-dark:#0B3948; --teal-mid:#5da7b2; --teal-light:#c8e6ea;
+  --gold:#9f8252; --gold-light:#f0e6d6; --flora:#fffcf2;
+  --greige-d:#8e897a; --greige-l:#dbd8ca;
+  --warm:#4caf7d; --critical:#c0544a; --bg:#f7f3ec;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:"DM Sans",sans-serif; background:var(--bg); color:var(--teal-dark); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+.privacy-bar { background:var(--teal-light); color:var(--teal-dark); font-size:9px; padding:4px 12px; text-align:center; font-family:"DM Mono",monospace; flex-shrink:0; }
+header { background:var(--teal-dark); padding:11px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:8px; flex-wrap:wrap; }
+header h1 { font-size:12px; font-weight:700; color:white; letter-spacing:.08em; text-transform:uppercase; }
+.hright { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+#save-status { font-size:10px; color:var(--teal-mid); font-family:"DM Mono",monospace; }
+.hbtn { border:none; border-radius:5px; padding:5px 11px; font-family:"DM Sans",sans-serif; font-size:10px; font-weight:700; cursor:pointer; text-transform:uppercase; transition:opacity .2s; white-space:nowrap; }
+.hbtn:hover { opacity:.82; }
+.hbtn-save   { background:var(--gold);       color:white; }
+.hbtn-url    { background:var(--teal-mid);   color:white; }
+.hbtn-export { background:var(--greige-l);   color:var(--greige-d); }
+.hbtn-import { background:var(--gold-light); color:var(--gold); }
+.hbtn-clear  { background:rgba(255,255,255,.15); color:white; }
+/* URL Dialog */
+#url-dialog { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:white; border:1.5px solid var(--greige-l); border-radius:12px;
+  padding:20px; z-index:3000; box-shadow:0 12px 48px rgba(11,57,72,.25);
+  display:none; flex-direction:column; gap:10px; min-width:320px; max-width:500px; }
+#url-dialog.vis { display:flex; }
+#url-dialog h3 { font-size:13px; font-weight:700; color:var(--teal-dark); }
+#url-dialog p { font-size:11px; color:var(--greige-d); line-height:1.6; }
+#url-output { width:100%; padding:8px 10px; border:1.5px solid var(--teal-mid);
+  border-radius:6px; font-size:10px; font-family:"DM Mono",monospace;
+  color:var(--teal-dark); background:var(--teal-light); }
+.url-btns { display:flex; gap:8px; }
+.url-btns button { flex:1; padding:8px; border:none; border-radius:6px;
+  font-family:"DM Sans",sans-serif; font-size:11px; font-weight:700;
+  cursor:pointer; text-transform:uppercase; }
+#import-file { display:none; }
+.layout { display:grid; grid-template-columns:270px 1fr; flex:1; overflow:hidden; }
+.sidebar { background:white; border-right:1px solid var(--greige-l); overflow-y:auto; display:flex; flex-direction:column; }
+.ss { padding:12px; border-bottom:1px solid var(--greige-l); }
+.st { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:var(--gold); margin-bottom:9px; }
+.fr { display:flex; flex-direction:column; gap:3px; margin-bottom:6px; }
+label { font-size:9px; font-weight:600; color:var(--greige-d); text-transform:uppercase; letter-spacing:.06em; }
+input, select { background:var(--flora); border:1px solid var(--greige-l); border-radius:5px; padding:5px 8px; font-family:"DM Sans",sans-serif; font-size:11px; color:var(--teal-dark); outline:none; width:100%; }
+input:focus, select:focus { border-color:var(--teal-mid); background:white; }
+.fgrid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.btn { width:100%; padding:7px; border:none; border-radius:5px; font-family:"DM Sans",sans-serif; font-size:10px; font-weight:700; cursor:pointer; text-transform:uppercase; margin-top:4px; transition:all .2s; }
+.bp { background:var(--teal-dark); color:white; }
+.bp:hover { background:var(--teal-mid); }
+.bs { background:var(--gold-light); color:var(--gold); }
+.bs:hover { background:var(--greige-l); }
+.si { display:flex; align-items:center; gap:7px; padding:7px; border-radius:6px; margin-bottom:4px; background:var(--flora); border:1px solid var(--greige-l); cursor:pointer; transition:all .15s; }
+.si:hover { border-color:var(--teal-mid); background:white; }
+.si.sel { border-color:var(--teal-dark); background:var(--teal-light); }
+.nd { border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:700; color:white; }
+.ii { flex:1; min-width:0; }
+.iname { font-size:10px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.imeta { font-size:9px; color:var(--greige-d); font-family:"DM Mono",monospace; }
+.idel { width:15px; height:15px; border-radius:50%; background:none; border:1px solid var(--greige-l); cursor:pointer; font-size:8px; color:var(--greige-d); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+.idel:hover { background:#fee; border-color:var(--critical); color:var(--critical); }
+.main { display:flex; flex-direction:column; overflow:hidden; }
+.tabs { background:white; border-bottom:1px solid var(--greige-l); padding:0 16px; display:flex; flex-shrink:0; }
+.tab { padding:10px 12px 8px; font-size:10px; font-weight:600; color:var(--greige-d); cursor:pointer; border-bottom:2px solid transparent; text-transform:uppercase; letter-spacing:.04em; transition:all .2s; }
+.tab.active { color:var(--teal-dark); border-bottom-color:var(--gold); }
+.tab:hover { color:var(--teal-dark); }
+.view { display:none; flex:1; flex-direction:column; overflow:hidden; position:relative; }
+.view.active { display:flex; }
+canvas { flex:1; display:block; width:100%; }
+.chint { position:absolute; bottom:10px; right:10px; background:rgba(11,57,72,.88); color:white; font-size:8px; padding:7px 11px; border-radius:6px; font-family:"DM Mono",monospace; line-height:2; pointer-events:none; }
+.mwrap { flex:1; padding:16px; overflow:auto; }
+.mgrid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:9px; min-height:300px; height:100%; }
+.quad { border-radius:9px; padding:13px; display:flex; flex-direction:column; gap:5px; position:relative; overflow:hidden; }
+.qlabel { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; }
+.qsub { font-size:8px; opacity:.65; font-family:"DM Mono",monospace; margin-bottom:3px; }
+.qnodes { display:flex; flex-wrap:wrap; gap:4px; }
+.qnode { display:flex; align-items:center; gap:4px; padding:3px 7px; border-radius:14px; font-size:9px; font-weight:600; background:rgba(255,255,255,.75); border:1px solid rgba(255,255,255,.9); }
+.qdot { width:6px; height:6px; border-radius:50%; }
+.twrap { flex:1; padding:16px; overflow:auto; }
+table.tl { border-collapse:collapse; width:100%; font-size:11px; }
+table.tl th { background:var(--teal-dark); color:white; font-size:9px; font-weight:700; text-transform:uppercase; padding:8px 10px; text-align:center; }
+table.tl th:first-child { text-align:left; min-width:130px; }
+table.tl td { padding:6px 8px; border-bottom:1px solid var(--greige-l); background:white; text-align:center; vertical-align:middle; }
+table.tl tr:nth-child(even) td { background:var(--flora); }
+table.tl td:first-child { text-align:left; }
+.tlbadge { padding:2px 7px; border-radius:10px; font-size:9px; font-weight:700; font-family:"DM Mono",monospace; display:inline-block; }
+.tlsel { font-size:10px; padding:3px 6px; border-radius:4px; border:1px solid var(--greige-l); background:var(--flora); font-family:"DM Sans",sans-serif; cursor:pointer; }
+.tladd { margin-top:12px; display:flex; gap:8px; align-items:center; }
+.tladd input { flex:1; }
+.legend { padding:6px 16px; background:white; border-top:1px solid var(--greige-l); display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+.ltitle { font-size:9px; font-weight:700; text-transform:uppercase; color:var(--greige-d); }
+.litem { display:flex; align-items:center; gap:4px; font-size:9px; }
+.ldot { width:8px; height:8px; border-radius:50%; }
+.ldiv { width:1px; height:12px; background:var(--greige-l); }
+#tooltip { position:fixed; background:var(--teal-dark); color:white; padding:9px 12px; border-radius:7px; font-size:10px; line-height:1.7; pointer-events:none; opacity:0; transition:opacity .15s; z-index:1000; max-width:220px; }
+#tooltip.vis { opacity:1; }
+#tooltip strong { display:block; font-size:12px; margin-bottom:3px; color:var(--teal-light); }
+/* Verbindungs-Picker */
+#conn-picker { position:fixed; background:white; border:1px solid var(--greige-l); border-radius:10px; padding:10px; display:none; flex-direction:column; gap:6px; z-index:2000; box-shadow:0 8px 32px rgba(11,57,72,.18); min-width:180px; }
+#conn-picker.vis { display:flex; }
+#conn-picker .cp-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--gold); margin-bottom:2px; }
+.cp-btn { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; border:1px solid var(--greige-l); background:var(--flora); cursor:pointer; font-family:"DM Sans",sans-serif; font-size:11px; font-weight:600; color:var(--teal-dark); transition:all .15s; }
+.cp-btn:hover { background:var(--teal-light); border-color:var(--teal-mid); }
+.cp-icon { font-size:16px; width:22px; text-align:center; }
+.cp-del { background:none; border:none; color:var(--greige-d); font-size:10px; cursor:pointer; padding:4px 8px; border-radius:4px; text-align:left; font-family:"DM Sans",sans-serif; }
+.cp-del:hover { color:var(--critical); background:#fee; }
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-thumb { background:var(--greige-l); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="privacy-bar">
+  Daten bleiben ausschliesslich in Ihrem Browser - kein Server, keine Weitergabe, volle Kontrolle bei Ihnen
+</div>
+
+<header>
+  <h1>Stakeholder Netzwerk - CMKB</h1>
+  <div class="hright">
+    <span id="save-status"></span>
+    <button class="hbtn hbtn-save"   onclick="saveLocal()">Speichern</button>
+    <button class="hbtn hbtn-url"    onclick="saveAsURL()">&#128279; Link erstellen</button>
+    <button class="hbtn hbtn-export" onclick="exportJSON()">Exportieren</button>
+    <button class="hbtn hbtn-import" onclick="document.getElementById('import-file').click()">Importieren</button>
+    <button class="hbtn hbtn-clear"  onclick="clearAll()">Leeren</button>
+    <input type="file" id="import-file" accept=".json" onchange="importJSON(event)">
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+
+    <div class="ss">
+      <div class="st">Stakeholder hinzufuegen</div>
+      <div class="fr"><label>Name</label>
+        <input id="inp-name" placeholder="z.B. Maria Schneider" onkeydown="if(event.key==='Enter')addS()">
+      </div>
+      <div class="fr"><label>Rolle</label>
+        <input id="inp-role" placeholder="z.B. CFO">
+      </div>
+      <div class="fgrid">
+        <div class="fr"><label>Macht 1-5</label>
+          <select id="inp-macht">
+            <option value="1">1 gering</option><option value="2">2</option>
+            <option value="3" selected>3</option><option value="4">4</option><option value="5">5 hoch</option>
+          </select>
+        </div>
+        <div class="fr"><label>Interesse 1-5</label>
+          <select id="inp-int">
+            <option value="1">1 gering</option><option value="2">2</option>
+            <option value="3" selected>3</option><option value="4">4</option><option value="5">5 hoch</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr"><label>Beziehung</label>
+        <select id="inp-bez">
+          <option value="warm">Warm</option>
+          <option value="neutral" selected>Neutral</option>
+          <option value="kritisch">Kritisch</option>
+        </select>
+      </div>
+      <div class="fr"><label>Kernmotiv (optional)</label>
+        <input id="inp-motiv" placeholder="z.B. Budgetkontrolle">
+      </div>
+      <button class="btn bp" onclick="addS()">+ Hinzufuegen</button>
+    </div>
+
+    <div class="ss">
+      <div class="st">Verbindungstypen - Legende</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--teal-dark);">
+          <span style="font-size:14px;width:20px;text-align:center;">&#9889;</span> Konflikt / Spannung
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--teal-dark);">
+          <span style="font-size:14px;width:20px;text-align:center;">&#9733;</span> Starke Allianz
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--teal-dark);">
+          <span style="font-size:14px;width:20px;text-align:center;">&#129309;</span> Kooperation
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--teal-dark);">
+          <span style="font-size:14px;width:20px;text-align:center;">&#8594;</span> Berichtet an
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--teal-dark);">
+          <span style="font-size:14px;width:20px;text-align:center;">&#8596;</span> Abhaengigkeit
+        </div>
+        <div style="margin-top:6px;padding:8px;background:var(--teal-light);border-radius:6px;font-size:9px;color:var(--teal-dark);line-height:1.6;">
+          Auf der Map: Knoten anklicken, dann zweiten Knoten anklicken um Verbindung zu ziehen
+        </div>
+      </div>
+    </div>
+
+    <div class="ss" style="flex:1;">
+      <div class="st">Meine Stakeholder (<span id="count">0</span>)</div>
+      <div id="slist">
+        <div style="color:var(--greige-d);font-size:11px;text-align:center;padding:18px 8px;line-height:1.6;">
+          Trage deinen ersten Stakeholder ein
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('network',this)">Netzwerk-Map</div>
+      <div class="tab" onclick="switchTab('matrix',this)">Prioritaets-Matrix</div>
+      <div class="tab" onclick="switchTab('timeline',this)">Beziehungsverlauf</div>
+    </div>
+
+    <div id="view-network" class="view active">
+      <canvas id="cv"></canvas>
+      <div class="chint">
+        Knoten anklicken = auswaehlen<br>
+        Ausgewaehlten + zweiten anklicken = Verbindung ziehen<br>
+        Verbindungslabel anklicken = Typ aendern oder loeschen<br>
+        Knoten ziehen = verschieben<br>
+        Groesse = Macht &nbsp; Farbe = Beziehung
+      </div>
+    </div>
+
+    <div id="view-matrix" class="view">
+      <div class="mwrap"><div class="mgrid" id="mgrid"></div></div>
+    </div>
+
+    <div id="view-timeline" class="view">
+      <div class="twrap">
+        <table class="tl" id="tltable"></table>
+        <div class="tladd">
+          <input id="tlnew" placeholder="Neue Spalte z.B. KW 12">
+          <button class="btn bs" style="width:auto;padding:6px 13px;margin:0;" onclick="addTlCol()">+ Spalte</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="ltitle">Beziehungsqualitaet</span>
+      <div class="litem"><div class="ldot" style="background:#4caf7d"></div>Warm</div>
+      <div class="litem"><div class="ldot" style="background:#9f8252"></div>Neutral</div>
+      <div class="litem"><div class="ldot" style="background:#c0544a"></div>Kritisch</div>
+      <div class="ldiv"></div>
+      <span class="ltitle">Verbindungen</span>
+      <div class="litem"><span style="font-size:12px;">&#9889;</span>Konflikt</div>
+      <div class="litem"><span style="font-size:12px;">&#9733;</span>Allianz</div>
+      <div class="litem"><span style="font-size:12px;">&#129309;</span>Kooperation</div>
+      <div class="litem"><span style="font-size:12px;">&#8594;</span>Berichtet</div>
+      <div class="litem"><span style="font-size:12px;">&#8596;</span>Abhaengig</div>
+      <div class="ldiv"></div>
+      <div class="litem" style="color:var(--greige-d);font-family:'DM Mono',monospace;font-size:8px;">Watkins 2003 - Cross & Thomas 2008</div>
+    </div>
+  </div>
+</div>
+
+<!-- Verbindungs-Picker Popup -->
+<div id="conn-picker">
+  <div class="cp-title">Verbindungstyp waehlen</div>
+  <div class="cp-btn" onclick="setConnType('konflikt')">
+    <span class="cp-icon">&#9889;</span> Konflikt / Spannung
+  </div>
+  <div class="cp-btn" onclick="setConnType('allianz')">
+    <span class="cp-icon">&#9733;</span> Starke Allianz
+  </div>
+  <div class="cp-btn" onclick="setConnType('kooperation')">
+    <span class="cp-icon">&#129309;</span> Kooperation
+  </div>
+  <div class="cp-btn" onclick="setConnType('berichtet')">
+    <span class="cp-icon">&#8594;</span> Berichtet an
+  </div>
+  <div class="cp-btn" onclick="setConnType('abhaengigkeit')">
+    <span class="cp-icon">&#8596;</span> Abhaengigkeit
+  </div>
+  <hr style="border:none;border-top:1px solid var(--greige-l);margin:2px 0;">
+  <button class="cp-del" onclick="deletePickerConn()">Verbindung loeschen</button>
+  <button class="cp-del" onclick="closePicker()">Abbrechen</button>
+</div>
+
+<!-- URL Dialog -->
+<div id="url-dialog">
+  <h3>&#128279; Dein persönlicher Link</h3>
+  <p>Kopiere diesen Link und bookmarke ihn im Browser oder speichere ihn in deinen Notizen. Beim nächsten Öffnen sind alle deine Daten wieder da — auf jedem Gerät.</p>
+  <input id="url-output" readonly type="text" value="">
+  <div class="url-btns">
+    <button onclick="copyURLFromDialog()" style="background:var(--teal-dark);color:white;">Link kopieren</button>
+    <button onclick="closeURLDialog()" style="background:var(--greige-l);color:var(--greige-d);">Schliessen</button>
+  </div>
+  <p style="font-size:10px;color:var(--greige-d);">&#128274; Deine Daten sind nur in diesem Link — kein Server, keine Weitergabe.</p>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ── VERBINDUNGSTYPEN ─────────────────────────────────────
+var CONN_TYPES = {
+  konflikt:      { icon:'⚡', label:'Konflikt',     color:'#c0544a', dash:[5,4],  width:2.5 },
+  allianz:       { icon:'★', label:'Allianz',      color:'#4caf7d', dash:[],     width:3   },
+  kooperation:   { icon:'🤝', label:'Kooperation', color:'#5da7b2', dash:[],     width:2   },
+  berichtet:     { icon:'→', label:'Berichtet',    color:'#0B3948', dash:[],     width:2   },
+  abhaengigkeit: { icon:'↔', label:'Abhaengig',    color:'#9f8252', dash:[6,3],  width:1.5 }
+};
+
+var COLORS = { warm:'#4caf7d', neutral:'#9f8252', kritisch:'#c0544a' };
+var stakeholders = [], connections = [], nodes = [];
+var tlCols = ['Start','KW 2','KW 4','KW 8'], tlData = {};
+var dragging = null, dox = 0, doy = 0;
+var hovered = null, selId = null;
+var connectFrom = null; // ID des ersten angeklickten Knotens
+var pickerConnIdx = -1; // Index der Verbindung im Picker
+var STORAGE_KEY = 'cmkb_netzwerk_v2';
+
+// ── STORAGE ──────────────────────────────────────────────
+function saveLocal() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildData()));
+    showStatus('Gespeichert');
+  } catch(e) { showStatus('Speichern fehlgeschlagen'); }
+}
+
+function loadLocal() {
+  // Erst URL-Parameter prüfen — hat Vorrang vor localStorage
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var urlData = params.get('d');
+    if (urlData) {
+      var decoded = JSON.parse(decodeURIComponent(atob(urlData)));
+      applyData(decoded);
+      updateAll();
+      showStatus('Daten aus Link geladen');
+      // Auch in localStorage speichern
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(decoded));
+      return;
+    }
+  } catch(e) {}
+  // Fallback: localStorage
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { applyData(JSON.parse(raw)); updateAll(); }
+  } catch(e) {}
+}
+
+function saveAsURL() {
+  try {
+    var data = buildData();
+    var encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    var url = window.location.origin + window.location.pathname + '?d=' + encoded;
+    // URL in Zwischenablage kopieren
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function() {
+        showStatus('Link kopiert! Bookmarken oder speichern.');
+        showURLDialog(url);
+      });
+    } else {
+      showURLDialog(url);
+    }
+  } catch(e) { showStatus('Link konnte nicht erstellt werden'); }
+}
+
+function showURLDialog(url) {
+  var dialog = document.getElementById('url-dialog');
+  var input = document.getElementById('url-output');
+  input.value = url;
+  dialog.classList.add('vis');
+}
+
+function closeURLDialog() {
+  document.getElementById('url-dialog').classList.remove('vis');
+}
+
+function copyURLFromDialog() {
+  var input = document.getElementById('url-output');
+  input.select();
+  document.execCommand('copy');
+  showStatus('Link kopiert!');
+}
+
+function exportJSON() {
+  var json = JSON.stringify(buildData(), null, 2);
+  var blob = new Blob([json], { type:'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'CMKB_Stakeholder_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showStatus('Exportiert');
+}
+
+function importJSON(event) {
+  var file = event.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try { applyData(JSON.parse(e.target.result)); updateAll(); showStatus('Importiert'); }
+    catch(err) { showStatus('Datei ungueltig'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+
+function clearAll() {
+  if (!confirm('Alle Daten loeschen?')) return;
+  stakeholders = []; connections = []; nodes = [];
+  tlData = {}; tlCols = ['Start','KW 2','KW 4','KW 8'];
+  connectFrom = null; selId = null;
+  localStorage.removeItem(STORAGE_KEY);
+  updateAll(); showStatus('Geleert');
+}
+
+function buildData() {
+  return {
+    version:'2.0', date:new Date().toISOString(),
+    stakeholders:stakeholders, connections:connections,
+    timeline:{ columns:tlCols, data:tlData },
+    positions:nodes.map(function(n){ return {id:n.id,x:n.x,y:n.y}; })
+  };
+}
+
+function applyData(d) {
+  stakeholders = d.stakeholders || [];
+  connections  = d.connections  || [];
+  if (d.timeline) { tlCols = d.timeline.columns || tlCols; tlData = d.timeline.data || {}; }
+  var cv = document.getElementById('cv');
+  var w = cv.offsetWidth||600, h = cv.offsetHeight||400;
+  nodes = stakeholders.map(function(s,i) {
+    var p = d.positions && d.positions.find(function(p){ return p.id===s.id; });
+    if (p && !isNaN(p.x)) return {id:s.id,x:p.x,y:p.y};
+    var a = i*2*Math.PI/Math.max(stakeholders.length,1)-Math.PI/2;
+    var r = Math.min(w,h)*0.28;
+    return {id:s.id,x:w/2+Math.cos(a)*r,y:h/2+Math.sin(a)*r};
+  });
+}
+
+function showStatus(msg) {
+  var el = document.getElementById('save-status');
+  el.textContent = msg;
+  setTimeout(function(){ el.textContent=''; }, 2500);
+}
+
+// ── ADD / DELETE STAKEHOLDER ─────────────────────────────
+function addS() {
+  var name = document.getElementById('inp-name').value.trim();
+  if (!name) return;
+  var id = 'sk_'+Date.now();
+  var s = { id:id, name:name,
+    role:document.getElementById('inp-role').value.trim(),
+    macht:parseInt(document.getElementById('inp-macht').value),
+    interesse:parseInt(document.getElementById('inp-int').value),
+    beziehung:document.getElementById('inp-bez').value,
+    motiv:document.getElementById('inp-motiv').value.trim() };
+  stakeholders.push(s);
+  tlData[id] = {};
+  tlCols.forEach(function(c){ tlData[id][c]=s.beziehung; });
+  var cv=document.getElementById('cv');
+  var a=nodes.length*2.4, r=Math.min(cv.width||600,cv.height||400)*0.28;
+  nodes.push({id:id,x:(cv.width||600)/2+Math.cos(a)*r,y:(cv.height||400)/2+Math.sin(a)*r});
+  ['inp-name','inp-role','inp-motiv'].forEach(function(i){ document.getElementById(i).value=''; });
+  updateAll(); saveLocal();
+}
+
+function delS(id) {
+  stakeholders=stakeholders.filter(function(s){ return s.id!==id; });
+  nodes=nodes.filter(function(n){ return n.id!==id; });
+  connections=connections.filter(function(c){ return c.from!==id&&c.to!==id; });
+  delete tlData[id];
+  if (selId===id) selId=null;
+  if (connectFrom===id) connectFrom=null;
+  updateAll(); saveLocal();
+}
+
+// ── VERBINDUNGEN ─────────────────────────────────────────
+var pickerX=0, pickerY=0;
+
+function openPickerNew(fromId, toId, x, y) {
+  // Neue Verbindung: check ob schon vorhanden
+  var ex = connections.findIndex(function(c){ return (c.from===fromId&&c.to===toId)||(c.from===toId&&c.to===fromId); });
+  if (ex!==-1) {
+    pickerConnIdx = ex;
+  } else {
+    connections.push({ from:fromId, to:toId, type:'kooperation' });
+    pickerConnIdx = connections.length-1;
+  }
+  showPicker(x, y);
+}
+
+function openPickerEdit(idx, x, y) {
+  pickerConnIdx = idx;
+  showPicker(x, y);
+}
+
+function showPicker(x, y) {
+  var picker = document.getElementById('conn-picker');
+  picker.style.left = Math.min(x, window.innerWidth-200)+'px';
+  picker.style.top  = Math.min(y, window.innerHeight-260)+'px';
+  picker.classList.add('vis');
+}
+
+function closePicker() {
+  document.getElementById('conn-picker').classList.remove('vis');
+  pickerConnIdx = -1;
+  connectFrom = null;
+  selId = null;
+  drawNet();
+}
+
+function setConnType(type) {
+  if (pickerConnIdx>=0 && pickerConnIdx<connections.length) {
+    connections[pickerConnIdx].type = type;
+  }
+  closePicker();
+  updateAll(); saveLocal();
+}
+
+function deletePickerConn() {
+  if (pickerConnIdx>=0) {
+    connections.splice(pickerConnIdx, 1);
+  }
+  closePicker();
+  updateAll(); saveLocal();
+}
+
+// ── RENDER LIST ──────────────────────────────────────────
+function updateAll() {
+  document.getElementById('count').textContent=stakeholders.length;
+  renderList(); drawNet(); renderMatrix(); renderTl();
+}
+
+function renderList() {
+  var el=document.getElementById('slist');
+  if (!stakeholders.length) {
+    el.innerHTML='<div style="color:var(--greige-d);font-size:11px;text-align:center;padding:18px 8px;">Trage deinen ersten Stakeholder ein</div>';
+    return;
+  }
+  el.innerHTML=stakeholders.map(function(s) {
+    var sz=(13+s.macht*2)+'px';
+    var isSel=s.id===selId;
+    var isConn=s.id===connectFrom;
+    var border = isConn ? 'border:2px solid var(--gold);background:var(--gold-light);' : (isSel?'border-color:var(--teal-dark);background:var(--teal-light);':'');
+    return '<div class="si" style="'+border+'" onclick="selS(\''+s.id+'\')">'+
+      '<div class="nd" style="background:'+COLORS[s.beziehung]+';width:'+sz+';height:'+sz+';">'+s.macht+'</div>'+
+      '<div class="ii"><div class="iname">'+s.name+'</div>'+
+      '<div class="imeta">'+(s.role||'--')+' M:'+s.macht+' I:'+s.interesse+'</div></div>'+
+      '<button class="idel" onclick="event.stopPropagation();delS(\''+s.id+'\')">x</button></div>';
+  }).join('');
+}
+
+function selS(id) {
+  closePicker();
+  if (connectFrom) {
+    // Zweiter Klick — Verbindung ziehen
+    if (connectFrom !== id) {
+      var n1=nodes.find(function(n){ return n.id===connectFrom; });
+      var n2=nodes.find(function(n){ return n.id===id; });
+      var mx = n1&&n2 ? (n1.x+n2.x)/2 : window.innerWidth/2;
+      var my = n1&&n2 ? (n1.y+n2.y)/2 : window.innerHeight/2;
+      openPickerNew(connectFrom, id, mx, my);
+    }
+    connectFrom = null; selId = null;
+  } else {
+    selId = id; connectFrom = id;
+  }
+  renderList(); drawNet();
+}
+
+// ── CANVAS ───────────────────────────────────────────────
+function initCanvas() {
+  var cv=document.getElementById('cv');
+  function resize() { cv.width=cv.offsetWidth; cv.height=cv.offsetHeight; drawNet(); }
+  window.addEventListener('resize', resize); setTimeout(resize, 60);
+
+  cv.addEventListener('mousedown', function(e) {
+    if (document.getElementById('conn-picker').classList.contains('vis')) return;
+    var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    var hitNode = nodeAt(mx, my);
+    var hitConn = hitNode ? -1 : connLabelAt(mx, my);
+
+    if (hitConn >= 0) {
+      openPickerEdit(hitConn, e.clientX, e.clientY);
+      return;
+    }
+    if (hitNode) {
+      if (connectFrom && connectFrom !== hitNode.id) {
+        openPickerNew(connectFrom, hitNode.id, e.clientX, e.clientY);
+        connectFrom = null; selId = null; renderList();
+      } else if (connectFrom === hitNode.id) {
+        // Doppelklick auf selben = deselect
+        connectFrom = null; selId = null; renderList(); drawNet();
+      } else {
+        dragging = hitNode; dox=mx-hitNode.x; doy=my-hitNode.y;
+        selId = hitNode.id; connectFrom = hitNode.id;
+        renderList(); drawNet();
+      }
+      return;
+    }
+    // Klick ins Leere
+    if (!dragging) { connectFrom=null; selId=null; renderList(); drawNet(); }
+  });
+
+  cv.addEventListener('mousemove', function(e) {
+    var r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    if (dragging) {
+      dragging.x=mx-dox; dragging.y=my-doy; drawNet(); return;
+    }
+    var hit=nodeAt(mx,my);
+    if (hit!==hovered) { hovered=hit; drawNet(); }
+    var tt=document.getElementById('tooltip');
+    if (hit) {
+      var s=stakeholders.find(function(s){ return s.id===hit.id; });
+      tt.innerHTML='<strong>'+s.name+'</strong>'+(s.role?s.role+'<br>':'')+
+        'Macht: '+s.macht+' - Interesse: '+s.interesse+'<br>'+
+        s.beziehung.charAt(0).toUpperCase()+s.beziehung.slice(1)+
+        (s.motiv?'<br>'+s.motiv:'');
+      tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-10)+'px';
+      tt.classList.add('vis');
+    } else { tt.classList.remove('vis'); }
+  });
+
+  cv.addEventListener('mouseup', function(){ if(dragging){ saveLocal(); } dragging=null; });
+  cv.addEventListener('mouseleave', function(){ dragging=null; hovered=null; document.getElementById('tooltip').classList.remove('vis'); });
+
+  // Touch
+  cv.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var t=e.touches[0], r=cv.getBoundingClientRect();
+    var mx=t.clientX-r.left, my=t.clientY-r.top;
+    var hit=nodeAt(mx,my);
+    if (hit) { dragging=hit; dox=mx-hit.x; doy=my-hit.y; }
+  },{passive:false});
+  cv.addEventListener('touchmove', function(e) {
+    e.preventDefault(); if(!dragging)return;
+    var t=e.touches[0],r=cv.getBoundingClientRect();
+    dragging.x=t.clientX-r.left-dox; dragging.y=t.clientY-r.top-doy; drawNet();
+  },{passive:false});
+  cv.addEventListener('touchend', function(){ if(dragging)saveLocal(); dragging=null; });
+
+  // Klick ausserhalb Picker schliesst ihn
+  document.addEventListener('click', function(e) {
+    var picker=document.getElementById('conn-picker');
+    if (picker.classList.contains('vis') && !picker.contains(e.target) && e.target.id!=='cv') {
+      closePicker();
+    }
+  });
+}
+
+function nodeAt(mx, my) {
+  for (var i=nodes.length-1;i>=0;i--) {
+    var n=nodes[i], s=stakeholders.find(function(s){ return s.id===n.id; });
+    if (!s) continue;
+    var r=nodeR(s), dx=mx-n.x, dy=my-n.y;
+    if (dx*dx+dy*dy<r*r) return n;
+  }
+  return null;
+}
+
+function connLabelAt(mx, my) {
+  for (var i=0;i<connections.length;i++) {
+    var c=connections[i];
+    var fn=nodes.find(function(n){ return n.id===c.from; });
+    var tn=nodes.find(function(n){ return n.id===c.to; });
+    if (!fn||!tn) continue;
+    var lx=(fn.x+tn.x)/2, ly=(fn.y+tn.y)/2;
+    var dx=mx-lx, dy=my-ly;
+    if (dx*dx+dy*dy<200) return i; // 14px hit radius
+  }
+  return -1;
+}
+
+function nodeR(s) { return 10+s.macht*5; }
+
+function drawNet() {
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+
+  if (!stakeholders.length) {
+    ctx.fillStyle='#b0aba2'; ctx.font='13px DM Sans,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Fuege links Stakeholder hinzu',cv.width/2,cv.height/2-10);
+    ctx.fillText('um das Netzwerk zu sehen',cv.width/2,cv.height/2+12);
+    return;
+  }
+
+  nodes.forEach(function(n,i) {
+    if (!n.x||isNaN(n.x)) {
+      var a=i*2*Math.PI/nodes.length-Math.PI/2, r=Math.min(cv.width,cv.height)*0.28;
+      n.x=cv.width/2+Math.cos(a)*r; n.y=cv.height/2+Math.sin(a)*r;
+    }
+  });
+
+  // Verbindungslinien
+  connections.forEach(function(conn, idx) {
+    var fn=nodes.find(function(n){ return n.id===conn.from; });
+    var tn=nodes.find(function(n){ return n.id===conn.to; });
+    if (!fn||!tn) return;
+    var ct = CONN_TYPES[conn.type] || CONN_TYPES.kooperation;
+
+    ctx.beginPath(); ctx.moveTo(fn.x,fn.y); ctx.lineTo(tn.x,tn.y);
+    ctx.strokeStyle=ct.color; ctx.lineWidth=ct.width;
+    ctx.setLineDash(ct.dash); ctx.stroke(); ctx.setLineDash([]);
+
+    // Pfeil
+    var dx=tn.x-fn.x, dy=tn.y-fn.y, len=Math.sqrt(dx*dx+dy*dy);
+    var st=stakeholders.find(function(s){ return s.id===conn.to; });
+    var ar=(st?nodeR(st):16)+5;
+    var ax=tn.x-(dx/len)*ar, ay=tn.y-(dy/len)*ar, ang=Math.atan2(dy,dx);
+    ctx.beginPath(); ctx.moveTo(ax,ay);
+    ctx.lineTo(ax-9*Math.cos(ang-0.4),ay-9*Math.sin(ang-0.4));
+    ctx.lineTo(ax-9*Math.cos(ang+0.4),ay-9*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fillStyle=ct.color; ctx.fill();
+
+    // Icon-Label in der Mitte
+    var lx=(fn.x+tn.x)/2, ly=(fn.y+tn.y)/2;
+    // Hintergrundkreis
+    ctx.beginPath(); ctx.arc(lx,ly,12,0,Math.PI*2);
+    ctx.fillStyle='white'; ctx.fill();
+    ctx.strokeStyle=ct.color; ctx.lineWidth=1.5; ctx.stroke();
+    // Icon
+    ctx.font='13px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle=ct.color;
+    ctx.fillText(ct.icon, lx, ly);
+    ctx.textBaseline='alphabetic';
+  });
+
+  // Knoten
+  nodes.forEach(function(n) {
+    var s=stakeholders.find(function(s){ return s.id===n.id; }); if (!s) return;
+    var r=nodeR(s);
+    var isH=hovered&&hovered.id===n.id;
+    var isSel=selId===n.id;
+    var isConn=connectFrom===n.id;
+
+    ctx.shadowColor='rgba(11,57,72,0.22)'; ctx.shadowBlur=isH?16:6;
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.fillStyle=COLORS[s.beziehung]; ctx.fill();
+    ctx.shadowBlur=0;
+
+    // Auswahlring
+    if (isSel||isConn) {
+      ctx.beginPath(); ctx.arc(n.x,n.y,r+5,0,Math.PI*2);
+      ctx.strokeStyle=isConn?'#9f8252':'#0B3948';
+      ctx.lineWidth=isConn?3:2.5; ctx.stroke();
+      if (isConn) {
+        ctx.font='bold 9px DM Sans,sans-serif'; ctx.fillStyle='#9f8252';
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText('Jetzt zweiten waehlen', n.x, n.y+r+9);
+        ctx.textBaseline='alphabetic';
+      }
+    }
+
+    // Interesse-Ring
+    ctx.beginPath();
+    ctx.arc(n.x,n.y,r+4,-Math.PI/2,-Math.PI/2+(s.interesse/5)*Math.PI*2);
+    ctx.strokeStyle='rgba(93,167,178,0.7)'; ctx.lineWidth=3; ctx.stroke();
+
+    // Initialen
+    var init=s.name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+    ctx.font='bold '+Math.max(9,Math.floor(r*0.55))+'px DM Sans,sans-serif';
+    ctx.fillStyle='white'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(init,n.x,n.y);
+
+    // Name
+    ctx.font='500 10px DM Sans,sans-serif'; ctx.fillStyle='#0B3948';
+    ctx.textBaseline='top'; ctx.fillText(s.name,n.x,n.y+r+8);
+    ctx.textBaseline='alphabetic';
+  });
+}
+
+// ── MATRIX ───────────────────────────────────────────────
+function renderMatrix() {
+  var quads=[
+    {lbl:'SCHLUESSEL',sub:'Macht >= 4 - Interesse >= 4',bg:'#0B3948',col:'white',   f:function(s){ return s.macht>=4&&s.interesse>=4; }},
+    {lbl:'BEOBACHTEN', sub:'Macht >= 4 - Interesse < 4', bg:'#f0e6d6',col:'#9f8252',f:function(s){ return s.macht>=4&&s.interesse<4;  }},
+    {lbl:'EINBEZIEHEN',sub:'Macht < 4 - Interesse >= 4', bg:'#c8e6ea',col:'#0B3948',f:function(s){ return s.macht<4&&s.interesse>=4;  }},
+    {lbl:'MINIMAL',    sub:'Macht < 4 - Interesse < 4',  bg:'#f5f0e8',col:'#8e897a',f:function(s){ return s.macht<4&&s.interesse<4;   }},
+  ];
+  document.getElementById('mgrid').innerHTML=quads.map(function(q) {
+    var m=stakeholders.filter(q.f);
+    var nh=m.length?m.map(function(s){
+      return '<div class="qnode"><div class="qdot" style="background:'+COLORS[s.beziehung]+'"></div>'+
+             '<span style="color:'+(q.col==='white'?'white':'#0B3948')+';font-size:9px">'+s.name+'</span></div>';
+    }).join(''):'<span style="font-size:9px;opacity:.45;color:'+q.col+'">Noch leer</span>';
+    return '<div class="quad" style="background:'+q.bg+'">'+
+      '<div class="qlabel" style="color:'+q.col+'">'+q.lbl+'</div>'+
+      '<div class="qsub" style="color:'+q.col+'">'+q.sub+'</div>'+
+      '<div class="qnodes">'+nh+'</div>'+
+      '<div style="position:absolute;bottom:10px;right:12px;font-size:22px;opacity:.07;">'+m.length+'</div></div>';
+  }).join('');
+}
+
+// ── TIMELINE ─────────────────────────────────────────────
+function renderTl() {
+  var tbl=document.getElementById('tltable');
+  if (!stakeholders.length) {
+    tbl.innerHTML='<tr><td style="padding:28px;text-align:center;color:var(--greige-d);font-size:11px;">Fuege Stakeholder hinzu um den Verlauf zu tracken</td></tr>';
+    return;
+  }
+  var bgM={warm:'#d4edda',neutral:'#fef3cd',kritisch:'#f8d7da'};
+  var fgM={warm:'#2d6a2d',neutral:'#856404',kritisch:'#721c24'};
+  var h='<thead><tr><th>Stakeholder</th>'+tlCols.map(function(c){ return '<th>'+c+'</th>'; }).join('')+'</tr></thead><tbody>';
+  stakeholders.forEach(function(s) {
+    h+='<tr><td><div style="display:flex;align-items:center;gap:6px;">'+
+      '<div class="nd" style="background:'+COLORS[s.beziehung]+';width:15px;height:15px;font-size:7px;">'+s.macht+'</div>'+
+      s.name+'</div></td>';
+    tlCols.forEach(function(col) {
+      var v=(tlData[s.id]&&tlData[s.id][col])||'';
+      if (v) {
+        h+='<td><span class="tlbadge" style="background:'+(bgM[v]||'#eee')+';color:'+(fgM[v]||'#333')+'">'+
+           v.charAt(0).toUpperCase()+v.slice(1)+'</span></td>';
+      } else {
+        h+='<td><select class="tlsel" onchange="setTl(\''+s.id+'\',\''+col+'\',this.value)">'+
+           '<option value="">-</option><option value="warm">Warm</option>'+
+           '<option value="neutral">Neutral</option><option value="kritisch">Kritisch</option>'+
+           '</select></td>';
+      }
+    });
+    h+='</tr>';
+  });
+  tbl.innerHTML=h+'</tbody>';
+}
+
+function setTl(sid,col,val) {
+  if (!tlData[sid]) tlData[sid]={};
+  tlData[sid][col]=val; renderTl(); saveLocal();
+}
+
+function addTlCol() {
+  var v=document.getElementById('tlnew').value.trim();
+  if (!v||tlCols.indexOf(v)!==-1) return;
+  tlCols.push(v); document.getElementById('tlnew').value=''; renderTl(); saveLocal();
+}
+
+// ── TABS ─────────────────────────────────────────────────
+function switchTab(view,el) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('view-'+view).classList.add('active');
+  if (view==='network') setTimeout(drawNet,50);
+  if (view==='matrix')  renderMatrix();
+  if (view==='timeline') renderTl();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('load', function(){ initCanvas(); loadLocal(); });
+</script>
+</body>
+</html>
